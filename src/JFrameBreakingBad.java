@@ -67,7 +67,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
          * 1 = izquierda
          * 2 = derecha
         */
-        iDireccionBarra = 2;
+        iDireccionBarra = 1;
  
         // se añade para que el teclado sea escuchado en el JFrame
         addKeyListener(this);
@@ -121,12 +121,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * 
      */
     public void actualiza() {
-        // actualiza dirección de la barra
-        if (iDireccionBarra == 1) {
-            perBarra.izquierda();
-        } else if (iDireccionBarra == 2) {
-            perBarra.derecha();
-        }
+
     }
     
     /**
@@ -188,17 +183,25 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
 
     @Override
     public void keyPressed(KeyEvent keyEvent) {
-
+        if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
+            perBarra.setX(perBarra.getX() - 10);
+        }
+        if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
+            perBarra.setX(perBarra.getX() + 10);
+        }        
+        
             
     }
 
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        if (keyEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
-            iDireccionBarra = 2;
-        } else if (keyEvent.getKeyCode() == KeyEvent.VK_LEFT) {
-            iDireccionBarra = 1;
+        if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
+            perBarra.setX(perBarra.getX());
         }
+        if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
+            perBarra.setX(perBarra.getX());
+        }        
+        
     }
 
 }
