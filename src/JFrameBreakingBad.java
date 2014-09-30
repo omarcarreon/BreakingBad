@@ -24,8 +24,11 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     private Graphics graGraficaApplet;  // Objeto grafico de la Imagen
     private LinkedList lnkBloques;      // Colección de Bloques
     private int iNumBloques;            // Cantidad de bloques
+    private int iRenBloques;            // Cantidad de renglones de bloques
     private Personaje perBarra;         // Objeto de la clase personaje (Barra)
+    private Personaje perBloque;        // Objeto de la clase personaje (Bloque)
     private int iDireccionBarra;        // Dirección de la barra
+    private int iBloques;               // Numero de bloques
     
     /**
      * JFrameBreakingBad
@@ -46,13 +49,13 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * funcionalidades.
      */
     public void init() {
-        setSize(500,500);
+        setSize(500,750);
         
         // se crea la lista encadenada de bloques
         lnkBloques = new LinkedList();
         
         // inicializa numero de bloques
-        iNumBloques = 1;
+        iNumBloques = 5;
         
         // se crea imagen de la barra
         URL urlImagenNena = this.getClass().getResource("barra.png");
@@ -68,7 +71,19 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
          * 2 = derecha
         */
         iDireccionBarra = 1;
- 
+        // ciclo para crear de 5 a 10 caminadores
+        for (int iI = 1; iI <= iNumBloques; iI++) {      
+            URL urlImagenCaminador = 
+                    this.getClass().getResource("bloque.png");
+            // se crea Bloque
+            perBloque = new Personaje(0,0,
+                    Toolkit.getDefaultToolkit().getImage(urlImagenCaminador));
+            // se posiciona a caminador afuera del applet del lado superior
+            perBloque.setX((iI*80));
+            perBloque.setY(getHeight()/2 );
+            lnkBloques.add(perBloque);  // agrega caminador a coleccion
+
+        }        
         // se añade para que el teclado sea escuchado en el JFrame
         addKeyListener(this);
     }
@@ -170,6 +185,14 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         if (perBarra != null) {
             g.drawImage(perBarra.getImagen(), perBarra.getX(),
                     perBarra.getY(), this);
+            
+            // dibuja la lista de bloques
+            for (Object lnkBloque : lnkBloques) {
+                Personaje perBloque = (Personaje)lnkBloque;
+                //Dibuja la imagen de Susy en la posicion actualizada
+                g.drawImage(perBloque.getImagen(), perBloque.getX(),
+                        perBloque.getY(), this);
+            }            
         } else {
             //Da un mensaje mientras se carga el dibujo	
             g.drawString("No se cargo la imagen..", 20, 20);
@@ -178,9 +201,14 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
 
     @Override
     public void keyTyped(KeyEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    /**
+     * keyPressed
+     * Metodo sobrescrito de la interface <code>KeyListener</code>.<P>
+     * En este metodo se maneja el evento que se genera al presionar una tecla.
+     * @param keyEvent es el <code>evento</code> que se genera al presionar una
+     * tecla.
+     */
     @Override
     public void keyPressed(KeyEvent keyEvent) {
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
@@ -190,9 +218,15 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             perBarra.setX(perBarra.getX() + 10);
         }        
         
-            
     }
-
+    
+    /**
+     * keyReleased
+     * Metodo sobrescrito de la interface <code>KeyListener</code>.<P>
+     * En este metodo se maneja el evento que se genera al soltar una tecla.
+     * @param keyEvent es el <code>evento</code> que se genera al soltar 
+     * una tecla.
+     */
     @Override
     public void keyReleased(KeyEvent keyEvent) {
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
