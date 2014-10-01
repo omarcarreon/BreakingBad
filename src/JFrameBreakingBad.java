@@ -28,6 +28,9 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     private Personaje perBloque;        // Objeto de la clase personaje (Bloque)
     private int iPosXBloque;            // Posicion en X del bloque
     private int iPosYBloque;            // Posicion en Y del bloque
+    private boolean bKeyPressed;       // Booleana para cuando se presiona tecla
+    private boolean bKeyReleased;       // Booleana para cuando se suelta tecla
+    private int iDirBarra;              // Direccion de la barra
     /**
      * JFrameBreakingBad
      * 
@@ -47,7 +50,19 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * funcionalidades.
      */
     public void init() {
+        // hago el JFrame de tamaño 500,750
         setSize(500,750);
+        
+        // inicializa booleana para cuando se presiona tecla
+        bKeyPressed = false;
+        // inicializa booleana para cuando se suelta tecla
+        bKeyReleased = false;
+ 
+        /* incializa direccion de la barra
+         * 1 = Izquierda
+         * 2 = Derecha
+        */
+        iDirBarra = 2;
         
         // se crea la lista encadenada de bloques
         lnkBloques = new LinkedList();
@@ -55,19 +70,18 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         // inicializa numero de bloques
         iNumBloques = 25;
         
-        
         // inicializa posicion en X del bloque
         iPosXBloque = 50;
         
-        // inicializa posicion en Y del bloque
+        // inicialeiza posicion en Y del bloque
         iPosYBloque = 50;
        
         // se crea imagen de la barra
         URL urlImagenNena = this.getClass().getResource("barra.png");
-        // se crea a Nena 
+        // se crea la barra
 	perBarra = new Personaje(0, 0,
                 Toolkit.getDefaultToolkit().getImage(urlImagenNena));
-        // inicializa posicion de Nena
+        // inicializa posicion de la barra
         perBarra.setX((getWidth() / 2) - (perBarra.getAncho()/2));
         perBarra.setY((getHeight() - perBarra.getAlto()));
         
@@ -78,15 +92,14 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             // se crea Bloque
             perBloque = new Personaje(iPosXBloque,iPosYBloque,
                     Toolkit.getDefaultToolkit().getImage(urlImagenCaminador));
-
             iPosXBloque += perBloque.getAncho();
-
             
-            if (iI % 5 == 0) {
-                iPosXBloque = 50;
-                iPosYBloque += perBloque.getAlto();
-            }
-            lnkBloques.add(perBloque);
+            lnkBloques.add(perBloque); // agrega el bloque a la lista encadenada
+            if (iI % 5 == 0) {          // si ya se han creado 5 bloques
+                iPosXBloque = 50;       // la posicion en X se reinicia 
+                iPosYBloque += perBloque.getAlto(); // aumenta la posicion en Y 
+                                                    // para crear nuevo renglon
+            }            
             
         }        
         // se añade para que el teclado sea escuchado en el JFrame
@@ -142,6 +155,21 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     public void actualiza() {
 
+        if (bKeyPressed && iDirBarra == 1) {
+            perBarra.setX(perBarra.getX() - 10);
+        }
+        if (bKeyPressed && iDirBarra == 2) {
+            perBarra.setX(perBarra.getX() + 10);
+            
+        }
+        if (bKeyReleased && iDirBarra == 1) {
+            perBarra.setX(perBarra.getX());
+           
+        }
+        if (bKeyReleased && iDirBarra == 2) {
+            perBarra.setX(perBarra.getX());
+          
+        }
     }
     
     /**
@@ -161,6 +189,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             perBarra.setX(0);
         }        
     }
+    
         public void paint (Graphics graGrafico){
         // Inicializan el DoubleBuffer
         if (imaImagenApplet == null){
@@ -185,7 +214,17 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         // Dibuja la imagen actualizada
         graGrafico.drawImage (imaImagenApplet, 0, 0, this);
     }    
-    
+
+    /**
+     * paint1
+     * 
+     * Metodo sobrescrito de la clase <code>JFrameBreakingBad</code>,
+     * heredado de la clase Container.<P>
+     * En este metodo se dibuja la imagen con la posicion actualizada,
+     * ademas que cuando la imagen es cargada te despliega una advertencia.
+     * @param g es el <code>objeto grafico</code> usado para dibujar.
+     * 
+     */        
     public void paint1 (Graphics g) {
         if (perBarra != null) {
             g.drawImage(perBarra.getImagen(), perBarra.getX(),
@@ -216,13 +255,19 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     @Override
     public void keyPressed(KeyEvent keyEvent) {
+        
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
-            perBarra.setX(perBarra.getX() - 10);
+            bKeyPressed = true;
+            iDirBarra = 1;
+            bKeyReleased = false;
+            
         }
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
-            perBarra.setX(perBarra.getX() + 10);
+            bKeyPressed = true;
+            iDirBarra = 2;
+            bKeyReleased = false;
         }        
-        
+
     }
     
     /**
@@ -234,12 +279,18 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     @Override
     public void keyReleased(KeyEvent keyEvent) {
+        
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
-            perBarra.setX(perBarra.getX());
+            bKeyReleased = true;
+            iDirBarra = 1;
+            bKeyPressed = false;
         }
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
-            perBarra.setX(perBarra.getX());
-        }        
+            bKeyReleased = true;
+            iDirBarra =2;
+            bKeyPressed = false;
+        }     
+           
         
     }
 
