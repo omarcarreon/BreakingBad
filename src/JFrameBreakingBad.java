@@ -24,7 +24,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     private Graphics graGraficaApplet;  // Objeto grafico de la Imagen
     private LinkedList lnkBloques;      // Colección de Bloques
     private int iNumBloques;            // Cantidad de bloques
-    private int iRenBloques;            // Cantidad de renglones de bloques
+    private int iContRenglonBloques; // Contador para hacer renglones de bloques
     private Personaje perBarra;         // Objeto de la clase personaje (Barra)
     private Personaje perBloque;        // Objeto de la clase personaje (Bloque)
     private int iDireccionBarra;        // Dirección de la barra
@@ -57,6 +57,9 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         // inicializa numero de bloques
         iNumBloques = 5;
         
+        // inicializa contador de renglones de bloques
+        iContRenglonBloques = 0;
+        
         // se crea imagen de la barra
         URL urlImagenNena = this.getClass().getResource("barra.png");
         // se crea a Nena 
@@ -72,17 +75,21 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         */
         iDireccionBarra = 1;
         // ciclo para crear de 5 a 10 caminadores
-        for (int iI = 1; iI <= iNumBloques; iI++) {      
+        for (int iI = 1; iI <= iNumBloques; iI++) { 
+            for ( int iJ = 1; iJ <= iNumBloques; iJ++) {
             URL urlImagenCaminador = 
                     this.getClass().getResource("bloque.png");
             // se crea Bloque
             perBloque = new Personaje(0,0,
                     Toolkit.getDefaultToolkit().getImage(urlImagenCaminador));
             // se posiciona a caminador afuera del applet del lado superior
-            perBloque.setX((iI*80));
-            perBloque.setY(getHeight()/2 );
+            perBloque.setX((iI*80)- perBloque.getAncho()+45);
+            perBloque.setY(perBloque.getAlto() + iContRenglonBloques);
+            
             lnkBloques.add(perBloque);  // agrega caminador a coleccion
-
+            }
+ 
+            
         }        
         // se añade para que el teclado sea escuchado en el JFrame
         addKeyListener(this);
