@@ -23,13 +23,11 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     private Image imaImagenApplet;   // Imagen a proyectar en Applet	
     private Graphics graGraficaApplet;  // Objeto grafico de la Imagen
     private LinkedList lnkBloques;      // Colección de Bloques
-    private int iNumBloques;            // Cantidad de bloques
-    private int iContRenglonBloques; // Contador para hacer renglones de bloques
+    private int iNumBloques;            // Número de bloques
     private Personaje perBarra;         // Objeto de la clase personaje (Barra)
     private Personaje perBloque;        // Objeto de la clase personaje (Bloque)
-    private int iDireccionBarra;        // Dirección de la barra
-    private int iBloques;               // Numero de bloques
-    
+    private int iPosXBloque;            // Posicion en X del bloque
+    private int iPosYBloque;            // Posicion en Y del bloque
     /**
      * JFrameBreakingBad
      * 
@@ -55,40 +53,40 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         lnkBloques = new LinkedList();
         
         // inicializa numero de bloques
-        iNumBloques = 5;
+        iNumBloques = 25;
         
-        // inicializa contador de renglones de bloques
-        iContRenglonBloques = 0;
         
+        // inicializa posicion en X del bloque
+        iPosXBloque = 50;
+        
+        // inicializa posicion en Y del bloque
+        iPosYBloque = 50;
+       
         // se crea imagen de la barra
         URL urlImagenNena = this.getClass().getResource("barra.png");
         // se crea a Nena 
 	perBarra = new Personaje(0, 0,
                 Toolkit.getDefaultToolkit().getImage(urlImagenNena));
         // inicializa posicion de Nena
-        perBarra.setX((getWidth() / 2) - (perBarra.getAncho() / 2));
+        perBarra.setX((getWidth() / 2) - (perBarra.getAncho()/2));
         perBarra.setY((getHeight() - perBarra.getAlto()));
         
-        /* inicializa dirección de la barra
-         * 1 = izquierda
-         * 2 = derecha
-        */
-        iDireccionBarra = 1;
-        // ciclo para crear de 5 a 10 caminadores
+        // ciclo para crear los bloques
         for (int iI = 1; iI <= iNumBloques; iI++) { 
-            for ( int iJ = 1; iJ <= iNumBloques; iJ++) {
             URL urlImagenCaminador = 
                     this.getClass().getResource("bloque.png");
             // se crea Bloque
-            perBloque = new Personaje(0,0,
+            perBloque = new Personaje(iPosXBloque,iPosYBloque,
                     Toolkit.getDefaultToolkit().getImage(urlImagenCaminador));
-            // se posiciona a caminador afuera del applet del lado superior
-            perBloque.setX((iI*80)- perBloque.getAncho()+45);
-            perBloque.setY(perBloque.getAlto() + iContRenglonBloques);
+
+            iPosXBloque += perBloque.getAncho();
+
             
-            lnkBloques.add(perBloque);  // agrega caminador a coleccion
+            if (iI % 5 == 0) {
+                iPosXBloque = 50;
+                iPosYBloque += perBloque.getAlto();
             }
- 
+            lnkBloques.add(perBloque);
             
         }        
         // se añade para que el teclado sea escuchado en el JFrame
