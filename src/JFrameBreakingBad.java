@@ -83,8 +83,10 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         // inicializa booleana para pausar el juego
         bPausa = false;
         
-        // inicializa booleana para saber si es juego nuevo
-        bNewGame = false;
+        // inicializa booleana para saber si es juego nuevo y limpiar la lista
+        bNewGame = true;
+        if(!bNewGame)
+            lnkBloques.clear();
         // inicializa booleana para cuando se presiona tecla
         bKeyPressed = false;
         // inicializa booleana para cuando se suelta tecla
@@ -121,7 +123,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         bDisparada=false;
         
         //Inicializa las vidas
-        iVidas = 4;
+        iVidas = 1;
         // creo imagen de inicio
         URL iURL = this.getClass().getResource("inicio.jpg");
         imaInicio = Toolkit.getDefaultToolkit().getImage(iURL);           
@@ -135,7 +137,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         perBarra.setY((getHeight() - perBarra.getAlto()));
         
         //se cre la imagen de la bola
-        URL urlImagenBola = this.getClass().getResource("ball.png");
+        URL urlImagenBola = this.getClass().getResource("bola.gif");
         // se crea a la Bola
 	perBola = new Personaje(0, 0,
                 Toolkit.getDefaultToolkit().getImage(urlImagenBola));
@@ -167,7 +169,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         addKeyListener(this);
         // creo imagen de Gameover
         imaGameOver = Toolkit.getDefaultToolkit()
-                .getImage(this.getClass().getResource("gameover.gif")); 
+                .getImage(this.getClass().getResource("gameover.jpg")); 
         // creo imagen de pausa
         URL pURL = this.getClass().getResource("pausa.png");
         imaPausa = Toolkit.getDefaultToolkit().getImage(pURL);  
@@ -209,8 +211,9 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
                 actualiza();
                 checaColision();
                 movimientoBola();
-                repaint();
+
             }
+                            repaint();
             try {
                 // El thread se duerme.
                 Thread.sleep (20);
@@ -248,7 +251,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         
         //Si se dispara la bola se actualiza el movimiento de la bola
         
-        if(bInicia && bDisparada){
+        if( bInicia && bDisparada){
             dX += dSlopeX;
             dY += dSlopeY;
             perBola.setX((int)(dX));
@@ -259,6 +262,9 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             perBola.setX(perBarra.getX() + ((perBarra.getAncho() / 2) - 
                     perBola.getAncho() / 2) );
             dX = perBola.getX();
+        }
+        if  (iContBloques == 25) {
+            bGameOver = true;
         }
     }
 
@@ -321,7 +327,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     public void paint1 (Graphics g) {
         if (!bInicia) {
             g.drawImage(imaInicio,0,0,this);
-        } else {
+        } 
             if (!bGameOver) {
                 g.drawImage(perBarra.getImagen(), perBarra.getX(),
                         perBarra.getY(), this);
@@ -338,17 +344,25 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
                 g.setColor(Color.white);
                 g.drawString("Score: " + iScore, 10,40);
                 g.drawString("Vidas: " + iVidas, 100, 40);
-            } else {
-                g.drawImage(imaGameOver,0,0,this);
+            
             }
+        
             if (bPausa) {
-                g.drawImage(imaPausa,0,0, this);
+                g.drawImage(imaPausa,80,200, this);
             }
-            if (iContBloques == iNumBloques) {
+            if (iContBloques == iNumBloques || iVidas == 0) {
                 bGameOver = true;
+                souSoundtrack.stop();
             }
-        }
+            if (bGameOver) {
+                g.drawImage(imaGameOver,0,0,this);
+                bDisparada = false;
+
+            }
+        
     }
+        
+    
     
     //Metodo que decide hacia donde se moverá la bola al colisiona
     public void movimientoBola() {
@@ -366,13 +380,12 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             dSlopeY *= -1;
         }
         // si llega al limite inferior
-        if(perBola.getY() >= getHeight()) {  
+        if(perBola.getY() > perBarra.getY() + perBarra.getAlto()) {  
             iVidas--;           // reduce una vida
             // reinicia la bola en su posicion inicial
             perBola.setY(perBarra.getY() - perBola.getAlto()); 
             // desactiva booleana de checa si se lanzó la bola
             bDisparada = false;
-           
         }
         
         //Para cuando colisiona con la barra
@@ -474,16 +487,17 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     @Override
     public void keyPressed(KeyEvent keyEvent) {
-        
+        // si se presiona la flecha izquierda
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
             bKeyPressed = true;
             iDirBarra = 1;
             bKeyReleased = false;
             
         }
+        // si se presiona la flecha derecha
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
             bKeyPressed = true;
-            iDirBarra = 2;
+            iDirBarra = 2;              
             bKeyReleased = false;
         }        
 
@@ -498,37 +512,46 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        
+        // si se suelta la flecha izquierda
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_LEFT) {
             bKeyReleased = true;
             iDirBarra = 1;
             bKeyPressed = false;
         }
+        // si se suelta la flecha derecha
         if (keyEvent.getKeyCode() ==  KeyEvent.VK_RIGHT) {
             bKeyReleased = true;
             iDirBarra =2;
             bKeyPressed = false;
         }     
-        
+        // si se presiona la tecla P
         if (keyEvent.getKeyCode() == KeyEvent.VK_P) {
             if (!bGameOver) {
-                bPausa =! bPausa;
+                bPausa =! bPausa;       // se pausa el juego
             }
         }
+        // si presiona la tecla ENTER
         if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-            bInicia = true;
-            souSoundtrack.play();
-        }
-        if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE){
-            bDisparada=true;
+            bInicia = true;             // booleana inicio de juego se activa
+            souSoundtrack.play();       // comienza la cancion
+            bDisparada = false;
+            
 
         }
-        
+        // si presiona la tecla SPACE
+        if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE){
+            bDisparada=true;            // inicia el movimiento de la bola
+            bInicia = true;
+
+        }
+        // si presiona la tecla R
         if (keyEvent.getKeyCode() == KeyEvent.VK_R) {
             if (bGameOver) {
-                bGameOver = false;
-                init();
+                bGameOver = false;                    
+                init();     
+                bDisparada = false;
             }
+            
         }
         
     }
