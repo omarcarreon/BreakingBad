@@ -5,7 +5,6 @@
  * @author Omar Antonio Carreón Medrano A01036074
  * @author Gabriel Salazar De Urquidi A01139126
  */
-import java.applet.AudioClip;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -14,8 +13,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.net.URL;
 import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFrame;
 
 public class JFrameBreakingBad extends JFrame implements Runnable,
@@ -38,7 +35,20 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
     private boolean bKeyReleased;       // Booleana para cuando se suelta tecla
     private int iDirBarra;              // Direccion de la barra
     private Personaje perBola;          //Objeto de la clase personaje (Bola)
+    private int iVelocidadBola;         // Velocidad de la bola
     private int iDireccionBarra;        // Dirección de la barra
+    private int iScore;                 // Score del juego
+    private int iContBloques;            // Contador de bloques destruidos
+    private boolean bNewGame;        // Booleana para saber si es un juego nuevo
+    private boolean bGameOver;      // Booleana para saber si es game over
+    private Image imaGameOver;          // Imagen de gameover
+    private boolean bPausa;             // Booleana para cuando se pause juego
+    private Image imaPausa;             // Imagen de pausa
+    private SoundClip souSoundtrack;      // Objeto SoundClip de soundtrack
+    private Image imaInicio;                        // Imagen de inicio
+    private boolean bInicia; //Booleano para saber si remover pantalla de inicio
+
+
     
     /**
      * JFrameBreakingBad
@@ -60,8 +70,21 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      */
     public void init() {
         // hago el JFrame de tamaño 500,750
-        setSize(500,750);
+        setSize(501,750);
+        // inicializa score
+        iScore = 0;
         
+        // inicializa booleana para saber si remover pantalla de inicio
+        bInicia = false;
+        
+        // inicializa booleana para saber si es game over
+        bGameOver = false;
+        
+        // inicializa booleana para pausar el juego
+        bPausa = false;
+        
+        // inicializa booleana para saber si es juego nuevo
+        bNewGame = false;
         // inicializa booleana para cuando se presiona tecla
         bKeyPressed = false;
         // inicializa booleana para cuando se suelta tecla
@@ -79,6 +102,9 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         // inicializa numero de bloques
         iNumBloques = 25;
         
+        // inicializa numero de bloques destruidos
+        iContBloques = 0;
+        
         // inicializa posicion en X del bloque
         iPosXBloque = 50;
         
@@ -95,13 +121,15 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         bDisparada=false;
         
         //Inicializa las vidas
-        iVidas=4;
-        
+        iVidas = 4;
+        // creo imagen de inicio
+        URL iURL = this.getClass().getResource("inicio.jpg");
+        imaInicio = Toolkit.getDefaultToolkit().getImage(iURL);           
         // se crea imagen de la barra
-        URL urlImagenNena = this.getClass().getResource("barra.png");
+        URL urlImagenBarra = this.getClass().getResource("barra.png");
         // se crea la barra
 	perBarra = new Personaje(0, 0,
-                Toolkit.getDefaultToolkit().getImage(urlImagenNena));
+                Toolkit.getDefaultToolkit().getImage(urlImagenBarra));
         // inicializa posicion de la barra
         perBarra.setX((getWidth() / 2) - (perBarra.getAncho()/2));
         perBarra.setY((getHeight() - perBarra.getAlto()));
@@ -137,6 +165,17 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         }        
         // se añade para que el teclado sea escuchado en el JFrame
         addKeyListener(this);
+        // creo imagen de Gameover
+        imaGameOver = Toolkit.getDefaultToolkit()
+                .getImage(this.getClass().getResource("gameover.gif")); 
+        // creo imagen de pausa
+        URL pURL = this.getClass().getResource("pausa.png");
+        imaPausa = Toolkit.getDefaultToolkit().getImage(pURL);  
+        // creo el sonido de soundtrack
+        souSoundtrack = new SoundClip("soundtrack.wav");
+        souSoundtrack.setLooping(true);
+        
+           
     }
     
     /** 
@@ -165,11 +204,13 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * 
      */
     public void run() {
-        while (iVidas > 0) {
-            actualiza();
-            checaColision();
-            movimientoBola();
-            repaint();
+        while (iVidas != 0) {
+            if (!bPausa) {
+                actualiza();
+                checaColision();
+                movimientoBola();
+                repaint();
+            }
             try {
                 // El thread se duerme.
                 Thread.sleep (20);
@@ -180,6 +221,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             }
         }
     }
+
     
     /**
      * actualiza
@@ -188,7 +230,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * 
      */
     public void actualiza() {
-
+        
         if (bKeyPressed && iDirBarra == 1) {
             perBarra.setX(perBarra.getX() - 10);
         }
@@ -203,14 +245,17 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         if (bKeyReleased && iDirBarra == 2) {
             perBarra.setX(perBarra.getX());
         }
-        //Si se dispara la bola se actualiza el movmiento de la bola
-        if(bDisparada){
+        
+        //Si se dispara la bola se actualiza el movimiento de la bola
+        
+        if(bInicia && bDisparada){
             dX += dSlopeX;
             dY += dSlopeY;
             perBola.setX((int)(dX));
             perBola.setY((int)(dY));
+ 
         }
-        else{
+        else if (!bDisparada) {
             perBola.setX(perBarra.getX() + ((perBarra.getAncho() / 2) - 
                     perBola.getAncho() / 2) );
             dX = perBola.getX();
@@ -226,17 +271,19 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * 
      */    
     public void checaColision() {
-        // si llega al limite derecho
-         if(perBarra.getX() + perBarra.getAncho() > getWidth()) {
+        // si la barra llega al limite derecho
+        if(perBarra.getX() + perBarra.getAncho() > getWidth()) {
             perBarra.setX(getWidth() - perBarra.getAncho());
             
-            // si llega al limite izquierdo
+            // si la barra llega al limite izquierdo
         } else if(perBarra.getX() < 0) {
             perBarra.setX(0);
         }        
+        
+  
+
     }
-    
-        public void paint (Graphics graGrafico){
+    public void paint (Graphics graGrafico){
         // Inicializan el DoubleBuffer
         if (imaImagenApplet == null){
                 imaImagenApplet = createImage (this.getSize().width, 
@@ -245,7 +292,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
         }
 
         // crea de fondo la imagen del espacio
-        URL urlImagenBackground = this.getClass().getResource("wallpaper.jpg");
+        URL urlImagenBackground = this.getClass().getResource("background.jpg");
         Image imaImagenBackground = 
                 Toolkit.getDefaultToolkit().getImage(urlImagenBackground);
 
@@ -259,7 +306,7 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
 
         // Dibuja la imagen actualizada
         graGrafico.drawImage (imaImagenApplet, 0, 0, this);
-    }    
+    }
 
     /**
      * paint1
@@ -272,50 +319,66 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
      * 
      */        
     public void paint1 (Graphics g) {
-        if (perBarra != null ) {
-            g.drawImage(perBarra.getImagen(), perBarra.getX(),
-                    perBarra.getY(), this);
-            
-            // dibuja la lista de bloques
-            for (Object lnkBloque : lnkBloques) {
-                Personaje perBloque = (Personaje)lnkBloque;
-                //Dibuja la imagen de Susy en la posicion actualizada
-                g.drawImage(perBloque.getImagen(), perBloque.getX(),
-                        perBloque.getY(), this);
-            }            
+        if (!bInicia) {
+            g.drawImage(imaInicio,0,0,this);
         } else {
-            //Da un mensaje mientras se carga el dibujo	
-            g.drawString("No se cargo la imagen..", 20, 20);
-        }
-        if (perBola != null ) {
-            g.drawImage(perBola.getImagen(), perBola.getX(),
-                    perBola.getY(), this);
-        } else {
-            //Da un mensaje mientras se carga el dibujo	
-            g.drawString("No se cargo la imagen..", 20, 20);
+            if (!bGameOver) {
+                g.drawImage(perBarra.getImagen(), perBarra.getX(),
+                        perBarra.getY(), this);
+                g.drawImage(perBola.getImagen(), perBola.getX(),
+                        perBola.getY(), this);            
+                // dibuja la lista de bloques
+                for (Object lnkBloque : lnkBloques) {
+                    Personaje perBloque = (Personaje)lnkBloque;
+                    //Dibuja la imagen de Susy en la posicion actualizada
+                    g.drawImage(perBloque.getImagen(), perBloque.getX(),
+                            perBloque.getY(), this);
+                }            
+                // Pinta el score
+                g.setColor(Color.white);
+                g.drawString("Score: " + iScore, 10,40);
+                g.drawString("Vidas: " + iVidas, 100, 40);
+            } else {
+                g.drawImage(imaGameOver,0,0,this);
+            }
+            if (bPausa) {
+                g.drawImage(imaPausa,0,0, this);
+            }
+            if (iContBloques == iNumBloques) {
+                bGameOver = true;
+            }
         }
     }
     
     //Metodo que decide hacia donde se moverá la bola al colisiona
     public void movimientoBola() {
-        if(perBola.getX() <= 0){
-            dSlopeX = dSlopeX * -1;
+        
+        // checa colision de la Bola con la pared del JFrame
+        if(perBola.getX() <= 0) {  // si llega al limite izquierdo del JFrame
+            dSlopeX *= -1;
         }
-        if(perBola.getX() > getWidth() - perBola.getAncho()){
-            dSlopeX = dSlopeX * -1;
+        // si llega al limite derecho
+        if(perBola.getX() > getWidth() - perBola.getAncho()) { 
+            dSlopeX *= -1; 
         }
-        if(perBola.getY() - (perBola.getAlto() / 2) <= 0){
-            dSlopeY = dSlopeY * -1;
+        // si llega al limite superior
+        if(perBola.getY() - (perBola.getAlto() / 2) <= 0) { 
+            dSlopeY *= -1;
         }
-        if(perBola.getY() >= getHeight()){
-            iVidas--;
-            perBola.setY(perBarra.getY() - perBola.getAlto());
+        // si llega al limite inferior
+        if(perBola.getY() >= getHeight()) {  
+            iVidas--;           // reduce una vida
+            // reinicia la bola en su posicion inicial
+            perBola.setY(perBarra.getY() - perBola.getAlto()); 
+            // desactiva booleana de checa si se lanzó la bola
             bDisparada = false;
+           
         }
+        
         //Para cuando colisiona con la barra
         if(perBarra.colisiona(perBola) && dY + perBola.getAlto()
-                <= perBarra.getY() + perBarra.getAlto()/4){
-            dSlopeY*=-1;
+                <= perBarra.getY() + perBarra.getAlto() / 4){
+            dSlopeY *= -1;
             if(perBola.getX() < perBarra.getX() + perBarra.getAncho() / 8){
                 if(dSlopeX > 0){
                     dSlopeX*=-1;
@@ -378,6 +441,24 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
                 }
             }
         }
+        // Cuando la Bola colisiona con los Bloques
+        for (int iI = 0; iI < lnkBloques.size(); iI++) {
+            Personaje perBloque = (Personaje) lnkBloques.get(iI);
+            
+            if( perBola.colisiona(perBloque)) {
+                if(perBola.getY() < perBloque.getY() | perBola.getY() > perBloque.getX() + perBloque.getAlto()) {
+                    dSlopeY *= -1;
+                    lnkBloques.remove(perBloque);
+                    iContBloques++;
+                } else {
+                    dSlopeX *= -1;
+                    lnkBloques.remove(perBloque);
+                    iContBloques++; 
+                }
+                iScore += 10;
+                
+            }
+        }        
     }
     
 
@@ -428,11 +509,28 @@ public class JFrameBreakingBad extends JFrame implements Runnable,
             iDirBarra =2;
             bKeyPressed = false;
         }     
-           
         
+        if (keyEvent.getKeyCode() == KeyEvent.VK_P) {
+            if (!bGameOver) {
+                bPausa =! bPausa;
+            }
+        }
+        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+            bInicia = true;
+            souSoundtrack.play();
+        }
         if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE){
             bDisparada=true;
+
         }
+        
+        if (keyEvent.getKeyCode() == KeyEvent.VK_R) {
+            if (bGameOver) {
+                bGameOver = false;
+                init();
+            }
+        }
+        
     }
 
 }
